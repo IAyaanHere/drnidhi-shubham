@@ -1,6 +1,13 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/i/drnidhi-shubham",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     { "source": "/api/geo", "destination": "/api/geo.json" },
     { "source": "/opened", "destination": "/opened.html" },
