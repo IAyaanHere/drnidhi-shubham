@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.npm
+
+# Temporary Chrome & Automation directories
+chrome_temp_profile/
+temp_chrome_*/
+test-site/
+downloaded_assets/
+__pycache__/
+*.pyc
+
+# Local Scratch / Test Scripts & Logs
+/*.py
+/*.txt
+/*.log
+
+# Root-level test screenshots & intermediate HTML/JSON files
+/*.png
+!/icon*.png
+!/apple-touch-icon-v2.png
+/*.html
+!/index.html
+!/opened.html
+!/map-embed.html
+/initial_data.json
+/chunk_*.js
+/module_*.js
+/drnidhi-shubham-local/
+
+# OS metadata
+.DS_Store
+Thumbs.db

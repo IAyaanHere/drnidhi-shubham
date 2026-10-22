@@ -1,0 +1,10 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/api/geo", "destination": "/api/geo.json" },
+    { "source": "/opened", "destination": "/opened.html" },
+    { "source": "/i/drnidhi-shubham", "destination": "/index.html" },
+    { "source": "/i/drnidhi-shubham/:path*", "destination": "/index.html" }
+  ]
+}

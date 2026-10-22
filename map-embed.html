@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Ammora resort - Google Maps</title>
+  <link rel="stylesheet" href="/leaflet.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #map {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Roboto, Arial, sans-serif;
+      background: #e5e3df;
+    }
+
+    /* Google Maps Place Card */
+    .place-card {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      max-width: 380px;
+      padding: 14px 16px;
+      cursor: default;
+      transition: box-shadow 0.2s ease;
+    }
+    .place-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+    .place-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .place-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: #202124;
+      line-height: 1.25;
+      text-decoration: none;
+    }
+    .place-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .btn-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      text-decoration: none;
+      transition: background-color 0.15s;
+    }
+    .btn-link {
+      background: transparent;
+      color: #1a73e8;
+      border-radius: 4px;
+    }
+    .btn-link:hover {
+      background: #f1f3f4;
+    }
+    .btn-directions {
+      background: #1a73e8;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    .btn-directions:hover {
+      background: #1557b0;
+    }
+    .place-address {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #5f6368;
+      line-height: 1.4;
+    }
+    .place-rating {
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+    }
+    .rating-num {
+      font-weight: 500;
+      color: #e37400;
+    }
+    .rating-stars {
+      color: #f4b400;
+      font-size: 13px;
+      letter-spacing: -1px;
+    }
+    .rating-count {
+      color: #1a73e8;
+      text-decoration: none;
+    }
+    .rating-count:hover {
+      text-decoration: underline;
+    }
+    .info-icon {
+      color: #70757a;
+      font-size: 12px;
+      margin-left: 2px;
+    }
+
+    /* Satellite Toggle */
+    .layer-switcher {
+      position: absolute;
+      bottom: 24px;
+      left: 10px;
+      z-index: 1000;
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      cursor: pointer;
+      border: 2px solid #ffffff;
+      background-size: cover;
+      background-position: center;
+      transition: transform 0.15s;
+    }
+    .layer-switcher:hover {
+      transform: scale(1.05);
+    }
+    .layer-switcher-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 9px;
+      text-align: center;
+      padding: 1px 0;
+      font-weight: 500;
+    }
+
+    /* Google Logo */
+    .google-logo {
+      position: absolute;
+      bottom: 4px;
+      left: 65px;
+      z-index: 1000;
+      pointer-events: none;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      opacity: 0.9;
+    }
+    .google-logo span:nth-child(1) { color: #4285F4; }
+    .google-logo span:nth-child(2) { color: #EA4335; }
+    .google-logo span:nth-child(3) { color: #FBBC05; }
+    .google-logo span:nth-child(4) { color: #4285F4; }
+    .google-logo span:nth-child(5) { color: #34A853; }
+    .google-logo span:nth-child(6) { color: #EA4335; }
+
+    /* Bottom terms bar */
+    .terms-bar {
+      position: absolute;
+      bottom: 2px;
+      right: 5px;
+      z-index: 1000;
+      font-size: 10px;
+      color: #5f6368;
+      background: rgba(255,255,255,0.7);
+      padding: 1px 5px;
+      border-radius: 2px;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .terms-bar a {
+      color: #5f6368;
+      text-decoration: none;
+    }
+    .terms-bar a:hover {
+      text-decoration: underline;
+    }
+
+    /* Fullscreen button */
+    .fullscreen-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: #ffffff;
+      width: 36px;
+      height: 36px;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #5f6368;
+      transition: background 0.15s;
+    }
+    .fullscreen-btn:hover {
+      background: #f1f3f4;
+      color: #202124;
+    }
+
+    /* Red Pin Marker */
+    .google-pin-container {
+      position: relative;
+      cursor: pointer;
+    }
+    .pin-shadow {
+      position: absolute;
+      width: 14px;
+      height: 6px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 50%;
+      bottom: -3px;
+      left: 10px;
+      filter: blur(1px);
+    }
+    .pin-label {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffffff;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #d93025;
+      white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      pointer-events: none;
+    }
+
+    /* Override Leaflet controls */
+    .leaflet-control-zoom {
+      border: none !important;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+      border-radius: 4px !important;
+      overflow: hidden;
+      margin-bottom: 26px !important;
+      margin-right: 10px !important;
+    }
+    .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+      background: #ffffff !important;
+      color: #5f6368 !important;
+      border-bottom: 1px solid #e6e6e6 !important;
+      width: 32px !important;
+      height: 32px !important;
+      line-height: 32px !important;
+      font-size: 16px !important;
+      font-weight: 300 !important;
+    }
+    .leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover {
+      background: #f1f3f4 !important;
+      color: #202124 !important;
+    }
+    .leaflet-control-attribution {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Place Card -->
+  <div class="place-card">
+    <div class="place-header">
+      <div>
+        <a id="cardTitle" href="https://www.google.com/maps/search/?api=1&query=AMMORA+RESORT,+Karla,+Lonavala" target="_blank" class="place-title">
+          Ammora resort
+        </a>
+      </div>
+      <div class="place-actions">
+        <!-- Open in Google Maps -->
+        <a id="btnExtLink" href="https://www.google.com/maps/search/?api=1&query=AMMORA+RESORT,+Karla,+Lonavala" target="_blank" title="View larger map" class="btn-action btn-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+          </svg>
+        </a>
+        <!-- Directions -->
+        <a id="btnDirections" href="https://www.google.com/maps/dir/?api=1&destination=AMMORA+RESORT,+Karla,+Lonavala" target="_blank" title="Get directions" class="btn-action btn-directions">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M22.43 10.59l-9.01-9.01c-.75-.75-2.07-.76-2.83 0l-9 9c-.78.78-.78 2.04 0 2.82l9 9c.39.39.9.58 1.41.58.51 0 1.02-.19 1.41-.58l8.99-8.99c.79-.79.8-2.05.03-2.82zm-10.42 6.4v-3h-4v-2h4v-3l4.5 4-4.5 4z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+    <div id="cardAddress" class="place-address">
+      216/2, Old Mumbai - Pune Hwy, next to royal residency, Karla, Lonavala, Maharashtra 410405, India
+    </div>
+    <div class="place-rating">
+      <span class="rating-num">4.6</span>
+      <span class="rating-stars">★★★★★</span>
+      <a href="https://www.google.com/maps/search/?api=1&query=AMMORA+RESORT,+Karla,+Lonavala" target="_blank" class="rating-count">(55)</a>
+      <span class="info-icon" title="Verified rating">ⓘ</span>
+    </div>
+  </div>
+
+  <!-- Fullscreen Toggle Button -->
+  <div class="fullscreen-btn" id="btnFullscreen" title="Toggle Fullscreen">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+    </svg>
+  </div>
+
+  <!-- Satellite / Road Layer Toggle -->
+  <div class="layer-switcher" id="btnLayerToggle" style="background-image: url('https://mt1.google.com/vt/lyrs=y&x=47352&y=29107&z=16');">
+    <div class="layer-switcher-label" id="lblLayer">Satellite</div>
+  </div>
+
+  <!-- Google Branding -->
+  <div class="google-logo">
+    <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+  </div>
+
+  <!-- Terms / Attributions -->
+  <div class="terms-bar">
+    <a href="https://www.google.com/intl/en_US/help/terms_maps/" target="_blank">Keyboard shortcuts</a>
+    <span>Map data &copy;2026 Google</span>
+    <a href="https://www.google.com/intl/en_US/help/terms_maps/" target="_blank">Terms</a>
+  </div>
+
+  <!-- Map Container -->
+  <div id="map"></div>
+
+  <script src="/leaflet.js"></script>
+  <script>
+    // Exact location of Ammora Resort, Karla, Lonavala
+    const VENUE_LAT = 18.7599201;
+    const VENUE_LNG = 73.465655;
+
+    // Initialize Leaflet Map
+    const map = L.map('map', {
+      center: [VENUE_LAT, VENUE_LNG],
+      zoom: 16,
+      zoomControl: false,
+      attributionControl: false
+    });
+
+    // Add standard zoom control in bottom-right
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // Google Maps Tile Layers
+    const roadLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      subdomains: ['0', '1', '2', '3'],
+      maxZoom: 20
+    }).addTo(map);
+
+    const satelliteLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+      subdomains: ['0', '1', '2', '3'],
+      maxZoom: 20
+    });
+
+    // Google Red Pin Marker Icon
+    const googlePinIcon = L.divIcon({
+      className: 'google-pin-container',
+      html: `
+        <div class="pin-shadow"></div>
+        <div class="pin-label">Ammora resort</div>
+        <svg width="34" height="48" viewBox="0 0 34 48" fill="none">
+          <path d="M17 0C7.61 0 0 7.61 0 17C0 29.75 17 48 17 48C17 48 34 29.75 34 17C34 7.61 26.39 0 17 0Z" fill="#EA4335"/>
+          <path d="M17 23C13.69 23 11 20.31 11 17C11 13.69 13.69 11 17 11C20.31 11 23 13.69 23 17C23 20.31 20.31 23 17 23Z" fill="#B31412"/>
+          <circle cx="17" cy="17" r="5" fill="#FFFFFF"/>
+        </svg>
+      `,
+      iconSize: [34, 48],
+      iconAnchor: [17, 48],
+      popupAnchor: [0, -48]
+    });
+
+    const marker = L.marker([VENUE_LAT, VENUE_LNG], { icon: googlePinIcon }).addTo(map);
+
+    marker.bindPopup(`
+      <div style="font-family:Roboto,Arial; font-size:13px; line-height:1.4;">
+        <strong style="font-size:14px; color:#202124;">Ammora resort</strong><br>
+        <span style="color:#5f6368;">216/2, Old Mumbai - Pune Hwy, Karla, Lonavala</span><br>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=AMMORA+RESORT,+Karla,+Lonavala" target="_blank" style="color:#1a73e8; font-weight:500; text-decoration:none; display:inline-block; margin-top:5px;">
+          Get directions &rarr;
+        </a>
+      </div>
+    `);
+
+    // Toggle Satellite / Road view
+    let isSatellite = false;
+    const btnLayer = document.getElementById('btnLayerToggle');
+    const lblLayer = document.getElementById('lblLayer');
+
+    btnLayer.addEventListener('click', () => {
+      isSatellite = !isSatellite;
+      if (isSatellite) {
+        map.removeLayer(roadLayer);
+        map.addLayer(satelliteLayer);
+        lblLayer.textContent = 'Map';
+        btnLayer.style.backgroundImage = "url('https://mt1.google.com/vt/lyrs=m&x=47352&y=29107&z=16')";
+      } else {
+        map.removeLayer(satelliteLayer);
+        map.addLayer(roadLayer);
+        lblLayer.textContent = 'Satellite';
+        btnLayer.style.backgroundImage = "url('https://mt1.google.com/vt/lyrs=y&x=47352&y=29107&z=16')";
+      }
+    });
+
+    // Fullscreen toggle
+    const btnFullscreen = document.getElementById('btnFullscreen');
+    btnFullscreen.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+  </script>
+</body>
+</html>

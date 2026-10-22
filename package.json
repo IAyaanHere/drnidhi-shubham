@@ -1,0 +1,16 @@
+{
+  "name": "drnidhi-shubham",
+  "version": "1.0.0",
+  "description": "Digital Wedding Invitation - Dr. Nidhi & Shubham",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "wedding-invitation",
+    "digital-invitation",
+    "drnidhi-shubham"
+  ],
+  "author": "",
+  "license": "ISC"
+}
