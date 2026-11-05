@@ -5,6 +5,8 @@ node_modules/
 # Temporary Chrome & Automation directories
 chrome_temp_profile/
 temp_chrome_*/
+chrome_temp_measure/
+verification_shots/
 test-site/
 downloaded_assets/
 __pycache__/
